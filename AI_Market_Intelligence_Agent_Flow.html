@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Market Intelligence Agent — Process Flow</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --accent3: #10b981;
+    --accent4: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --card: #13131f;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 60px;
+    animation: fadeDown 0.8s ease;
+  }
+
+  .header .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    border: 1px solid rgba(0,229,255,0.3);
+    padding: 6px 16px;
+    border-radius: 2px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+
+  .header h1 {
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  .header h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header p {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .meta-bar {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 60px;
+    flex-wrap: wrap;
+    animation: fadeUp 0.8s ease 0.2s both;
+  }
+
+  .meta-item {
+    text-align: center;
+  }
+
+  .meta-item .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .meta-item .value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .flow-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-left: 4px;
+  }
+
+  .step {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 8px;
+    animation: slideIn 0.6s ease both;
+  }
+
+  .step:nth-child(1) { animation-delay: 0.1s; }
+  .step:nth-child(2) { animation-delay: 0.2s; }
+  .step:nth-child(3) { animation-delay: 0.3s; }
+  .step:nth-child(4) { animation-delay: 0.4s; }
+  .step:nth-child(5) { animation-delay: 0.5s; }
+  .step:nth-child(6) { animation-delay: 0.6s; }
+
+  .step-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 48px;
+    flex-shrink: 0;
+  }
+
+  .step-num {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-line {
+    width: 2px;
+    flex: 1;
+    min-height: 24px;
+    margin: 4px 0;
+  }
+
+  .step-card {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .step-card:hover {
+    transform: translateX(4px);
+  }
+
+  .step-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 12px 0 0 12px;
+  }
+
+  .step.user .step-num { background: rgba(0,229,255,0.15); color: var(--accent); border: 1px solid rgba(0,229,255,0.3); }
+  .step.user .step-line { background: linear-gradient(to bottom, var(--accent), rgba(0,229,255,0.2)); }
+  .step.user .step-card::before { background: var(--accent); }
+  .step.user .step-card:hover { border-color: rgba(0,229,255,0.4); }
+
+  .step.data .step-num { background: rgba(245,158,11,0.15); color: var(--accent4); border: 1px solid rgba(245,158,11,0.3); }
+  .step.data .step-line { background: linear-gradient(to bottom, var(--accent4), rgba(245,158,11,0.2)); }
+  .step.data .step-card::before { background: var(--accent4); }
+  .step.data .step-card:hover { border-color: rgba(245,158,11,0.4); }
+
+  .step.ai .step-num { background: rgba(124,58,237,0.15); color: var(--accent2); border: 1px solid rgba(124,58,237,0.3); }
+  .step.ai .step-line { background: linear-gradient(to bottom, var(--accent2), rgba(124,58,237,0.2)); }
+  .step.ai .step-card::before { background: var(--accent2); }
+  .step.ai .step-card:hover { border-color: rgba(124,58,237,0.4); }
+
+  .step.output .step-num { background: rgba(16,185,129,0.15); color: var(--accent3); border: 1px solid rgba(16,185,129,0.3); }
+  .step.output .step-line { background: linear-gradient(to bottom, var(--accent3), rgba(16,185,129,0.1)); }
+  .step.output .step-card::before { background: var(--accent3); }
+  .step.output .step-card:hover { border-color: rgba(16,185,129,0.4); }
+
+  .step-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  .step-card p {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .tag.cyan { background: rgba(0,229,255,0.1); color: var(--accent); border: 1px solid rgba(0,229,255,0.2); }
+  .tag.amber { background: rgba(245,158,11,0.1); color: var(--accent4); border: 1px solid rgba(245,158,11,0.2); }
+  .tag.purple { background: rgba(124,58,237,0.1); color: #a78bfa; border: 1px solid rgba(124,58,237,0.2); }
+  .tag.green { background: rgba(16,185,129,0.1); color: var(--accent3); border: 1px solid rgba(16,185,129,0.2); }
+  .tag.gray { background: rgba(100,116,139,0.1); color: var(--muted); border: 1px solid rgba(100,116,139,0.2); }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 48px;
+    animation: fadeUp 0.8s ease 0.8s both;
+  }
+
+  .tech-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+
+  .tech-card:hover { border-color: rgba(0,229,255,0.3); }
+
+  .tech-card .tech-icon {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+
+  .tech-card .tech-name {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .tech-card .tech-desc {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .skills-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    animation: fadeUp 0.8s ease 1s both;
+  }
+
+  .skills-section h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+
+  .skill-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .skill-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    animation: fadeUp 0.8s ease 1.2s both;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @media (max-width: 600px) {
+    .step-left { width: 36px; }
+    .step-num { width: 36px; height: 36px; font-size: 12px; }
+    .step-card { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="tag">Portfolio Project — End to End</div>
+  <h1>AI Market Intelligence <span>Agent</span></h1>
+  <p>Automated Financial Analysis · Python · Dual API Integration · AI-Powered</p>
+</div>
+
+<div class="meta-bar">
+  <div class="meta-item">
+    <div class="label">Built By</div>
+    <div class="value">Mamta Gholap</div>
+  </div>
+  <div class="meta-item">
+    <div class="label">Language</div>
+    <div class="value">Python 3.11</div>
+  </div>
+  <div class="meta-item">
+    <div class="label">APIs Used</div>
+    <div class="value">2 Live APIs</div>
+  </div>
+  <div class="meta-item">
+    <div class="label">Type</div>
+    <div class="value">AI Automation</div>
+  </div>
+  <div class="meta-item">
+    <div class="label">Output</div>
+    <div class="value">Auto-Generated Report</div>
+  </div>
+</div>
+
+<div class="flow-container">
+
+  <div class="section-label">Process Flow</div>
+
+  <div class="step user">
+    <div class="step-left">
+      <div class="step-num">01</div>
+      <div class="step-line"></div>
+    </div>
+    <div class="step-card">
+      <h3>User Input</h3>
+      <p>User launches the tool and enters a stock ticker symbol (e.g. AAPL, NVDA, TSLA). Input is validated and converted to uppercase automatically.</p>
+      <div class="tags">
+        <span class="tag cyan">input()</span>
+        <span class="tag cyan">.upper()</span>
+        <span class="tag gray">CLI Interface</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step data">
+    <div class="step-left">
+      <div class="step-num">02</div>
+      <div class="step-line"></div>
+    </div>
+    <div class="step-card">
+      <h3>Live Stock Data Fetch</h3>
+      <p>Python calls the Alpha Vantage financial API in real time. Returns current price, daily change percentage, volume, and last trading day. Data is parsed from JSON response.</p>
+      <div class="tags">
+        <span class="tag amber">Alpha Vantage API</span>
+        <span class="tag amber">requests.get()</span>
+        <span class="tag amber">JSON parsing</span>
+        <span class="tag gray">Live Market Data</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step ai">
+    <div class="step-left">
+      <div class="step-num">03</div>
+      <div class="step-line"></div>
+    </div>
+    <div class="step-card">
+      <h3>AI Prompt Engineering</h3>
+      <p>Stock data is structured into a professional financial analyst prompt using Python f-strings. The prompt instructs the AI to produce a market summary, price movement analysis, and risk/opportunity assessment.</p>
+      <div class="tags">
+        <span class="tag purple">f-strings</span>
+        <span class="tag purple">Prompt Design</span>
+        <span class="tag gray">Context Injection</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step ai">
+    <div class="step-left">
+      <div class="step-num">04</div>
+      <div class="step-line"></div>
+    </div>
+    <div class="step-card">
+      <h3>Google Gemini AI Analysis</h3>
+      <p>Structured prompt is sent to Google Gemini AI via the official API. The model generates analyst-grade financial commentary including market context, risk factors, and investment opportunities. Error handling manages API failures gracefully.</p>
+      <div class="tags">
+        <span class="tag purple">Google Gemini API</span>
+        <span class="tag purple">google-genai</span>
+        <span class="tag purple">try/except</span>
+        <span class="tag gray">AI Generation</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step output">
+    <div class="step-left">
+      <div class="step-num">05</div>
+      <div class="step-line"></div>
+    </div>
+    <div class="step-card">
+      <h3>Report Generation & Auto-Save</h3>
+      <p>Combined stock data and AI analysis are formatted into a structured professional report. File is automatically named using the stock symbol and saved to disk using Python file handling.</p>
+      <div class="tags">
+        <span class="tag green">File I/O</span>
+        <span class="tag green">open() with statement</span>
+        <span class="tag green">Auto-naming</span>
+        <span class="tag gray">AAPL_report.txt</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step output">
+    <div class="step-left">
+      <div class="step-num">06</div>
+      <div class="step-line"></div>
+    </div>
+    <div class="step-card">
+      <h3>Output — Analyst-Grade Report</h3>
+      <p>User receives a complete market intelligence report: live price data + AI-generated analysis covering market sentiment, price movement indicators, investment risks and opportunities. Report persists on disk for future reference.</p>
+      <div class="tags">
+        <span class="tag green">Professional Report</span>
+        <span class="tag green">Persistent Storage</span>
+        <span class="tag gray">Ready for Presentation</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section-label">Tech Stack</div>
+  <div class="tech-grid">
+    <div class="tech-card">
+      <div class="tech-icon">🐍</div>
+      <div class="tech-name">Python 3.11</div>
+      <div class="tech-desc">Core language. Functions, loops, file I/O, error handling, f-strings.</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-icon">📈</div>
+      <div class="tech-name">Alpha Vantage</div>
+      <div class="tech-desc">Live financial market data API. Real-time stock prices and metrics.</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-icon">🤖</div>
+      <div class="tech-name">Google Gemini AI</div>
+      <div class="tech-desc">Large language model API for generating financial analysis and commentary.</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-icon">📦</div>
+      <div class="tech-name">requests / google-genai</div>
+      <div class="tech-desc">Python libraries for HTTP API calls and Gemini AI integration.</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-icon">💻</div>
+      <div class="tech-name">VS Code</div>
+      <div class="tech-desc">Development environment. Industry-standard IDE used by professional developers.</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-icon">🔧</div>
+      <div class="tech-name">Terminal / zsh</div>
+      <div class="tech-desc">Command-line execution, package management via pip3, file system navigation.</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="skills-section">
+    <h3>Python Skills Demonstrated</h3>
+    <div class="skills-grid">
+      <div class="skill-item"><div class="skill-dot" style="background:#00e5ff"></div>Variables & Data Types</div>
+      <div class="skill-item"><div class="skill-dot" style="background:#00e5ff"></div>Functions & Parameters</div>
+      <div class="skill-item"><div class="skill-dot" style="background:#f59e0b"></div>API Integration (REST)</div>
+      <div class="skill-item"><div class="skill-dot" style="background:#f59e0b"></div>JSON Parsing</div>
+      <div class="skill-item"><div class="skill-dot" style="background:#7c3aed"></div>AI API (Gemini)</div>
+      <div class="skill-item"><div class="skill-dot" style="background:#7c3aed"></div>Prompt Engineering</div>
+      <div class="skill-item"><div class="skill-dot" style="background:#10b981"></div>File Read / Write</div>
+      <div class="skill-item"><div class="skill-dot" style="background:#10b981"></div>Error Handling (try/except)</div>
+      <div class="skill-item"><div class="skill-dot" style="background:#00e5ff"></div>f-strings & Formatting</div>
+      <div class="skill-item"><div class="skill-dot" style="background:#f59e0b"></div>Libraries & pip</div>
+      <div class="skill-item"><div class="skill-dot" style="background:#10b981"></div>with Statement</div>
+      <div class="skill-item"><div class="skill-dot" style="background:#7c3aed"></div>Dual API Orchestration</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  AI Market Intelligence Agent · Built with Python 3.11 · April 2026
+</div>
+
+</body>
+</html>
